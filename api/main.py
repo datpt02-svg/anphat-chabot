@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import get_cors_allowed_origins, lifespan
-from api.routes import health, products, search
+from api.routes import copilot, health, products, search
 from api.schemas import APIError, ErrorResponse
 
 logging.basicConfig(
@@ -33,8 +33,9 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=False,
-        allow_methods=["GET", "OPTIONS"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
+        expose_headers=["X-Trace-Id"],
     )
 
     @app.middleware("http")
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(search.router)
     app.include_router(products.router)
+    app.include_router(copilot.router)
 
     return app
 

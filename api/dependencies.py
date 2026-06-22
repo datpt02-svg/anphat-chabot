@@ -1,7 +1,8 @@
-"""M4 lifespan and FastAPI dependencies (DB pool, HTTPx client, settings)."""
+"""M4/M5 lifespan and FastAPI dependencies (DB pool, HTTPx client, settings)."""
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
@@ -18,12 +19,19 @@ if sys.platform == "win32":
 
 load_dotenv(override=False)
 
+logger = logging.getLogger("api.dependencies")
+
 
 def get_database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL not set. Copy .env.example to .env.")
     return url
+
+
+def get_database_ro_url() -> str:
+    """Read-only URL used by the agent (DB_RO_URL). Falls back to DATABASE_URL for dev."""
+    return os.environ.get("DATABASE_RO_URL") or get_database_url()
 
 
 def get_cors_allowed_origins() -> list[str]:
@@ -78,11 +86,38 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.http_client = http_client
     app.state.meili_host = get_meili_host()
     app.state.meili_index = get_meili_index()
+
+    # M5: optional checkpointer + agent dependencies. Skipped when the package
+    # isn't fully installed (e.g. running M4 alone) to keep the catalog API runnable.
+    try:
+        from agents.langgraph.checkpointer import build_checkpointer
+        from agents.langgraph.graph import compile
+        from agents.tools import ALL_TOOLS
+
+        checkpointer, ckpt_pool = await build_checkpointer(get_database_url())
+        app.state.checkpoint_pool = ckpt_pool
+        app.state.checkpointer = checkpointer
+        app.state.agent_graph = compile(checkpointer=checkpointer)
+        app.state.agent_tools = ALL_TOOLS
+        logger.info("M5 agent graph compiled")
+    except Exception as exc:
+        logger.warning("M5 agent graph disabled: %s", exc)
+        app.state.checkpoint_pool = None
+        app.state.checkpointer = None
+        app.state.agent_graph = None
+        app.state.agent_tools = []
+
     try:
         yield
     finally:
         await http_client.aclose()
         await pool.close()
+        ckpt_pool = getattr(app.state, "checkpoint_pool", None)
+        if ckpt_pool is not None:
+            try:
+                await ckpt_pool.close()
+            except Exception as exc:
+                logger.warning("checkpoint pool close failed: %s", exc)
 
 
 async def get_db_conn(request: Request) -> AsyncIterator[Any]:
@@ -101,3 +136,14 @@ def get_meili_host_from_state(request: Request) -> str:
 
 def get_meili_index_from_state(request: Request) -> str:
     return request.app.state.meili_index
+
+
+def get_agent_graph(request: Request) -> Any:
+    graph = getattr(request.app.state, "agent_graph", None)
+    if graph is None:
+        raise RuntimeError("M5 agent graph not initialized")
+    return graph
+
+
+def get_agent_tools(request: Request) -> list[Any]:
+    return list(getattr(request.app.state, "agent_tools", []) or [])
