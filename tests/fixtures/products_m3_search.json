@@ -1,0 +1,414 @@
+[
+  {
+    "source_url": "https://m3-test.example.com/p/laptop-asus-vivobook-i5.html",
+    "source_product_id": "m3-001",
+    "sku": "SKU-M3-001",
+    "category": "laptop",
+    "subcategory": "laptop-van-phong",
+    "name": "Laptop ASUS Vivobook 15 OLED i5-13420H",
+    "brand": "ASUS",
+    "thumbnail_url": "https://example.com/m3-1.jpg",
+    "images": ["https://example.com/m3-1a.jpg"],
+    "prices": {
+      "list_price": 16990000,
+      "sale_price": 14990000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 5
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "Laptop ASUS Vivobook 15 OLED trang bị CPU Intel Core i5 thế hệ 13 và SSD 512GB.",
+    "breadcrumbs": ["Trang chủ", "Laptop", "Laptop ASUS"],
+    "raw_specs": {
+      "CPU": "Intel Core i5-13420H",
+      "RAM": "16GB DDR4",
+      "Ổ cứng": "512GB SSD",
+      "VGA": "Intel UHD",
+      "Màn hình": "15.6 inch FHD OLED"
+    },
+    "raw_html_path": "raw_html/m3-001.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop",
+      "brand": "ASUS",
+      "model": "Vivobook 15 OLED",
+      "cpu_model": "Intel Core i5-13420H",
+      "cpu_cores": 8,
+      "cpu_threads": 12,
+      "ram_gb": 16,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "storage_gb": 512,
+      "storage_type": "SSD",
+      "screen_inches": 15.6,
+      "refresh_rate_hz": 60,
+      "panel_type": "OLED",
+      "os": "Windows 11 Home",
+      "warranty_months": 24,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/laptop-hp-pavilion.html",
+    "source_product_id": "m3-002",
+    "sku": "SKU-M3-002",
+    "category": "laptop",
+    "subcategory": "laptop-van-phong",
+    "name": "Laptop HP Pavilion 14 i3 8GB SSD 256GB",
+    "brand": "HP",
+    "thumbnail_url": "https://example.com/m3-2.jpg",
+    "images": ["https://example.com/m3-2a.jpg"],
+    "prices": {
+      "list_price": 13500000,
+      "sale_price": 11990000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 12
+    },
+    "warranty": "Bảo hành 12 tháng",
+    "description": "HP Pavilion 14 với CPU Intel Core i3 và SSD 256GB cho công việc văn phòng.",
+    "breadcrumbs": ["Trang chủ", "Laptop", "HP Pavilion"],
+    "raw_specs": {
+      "CPU": "Intel Core i3-1215U",
+      "RAM": "8GB DDR4",
+      "Ổ cứng": "256GB SSD"
+    },
+    "raw_html_path": "raw_html/m3-002.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop",
+      "brand": "HP",
+      "model": "Pavilion 14",
+      "cpu_model": "Intel Core i3-1215U",
+      "cpu_cores": 6,
+      "cpu_threads": 8,
+      "ram_gb": 8,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "storage_gb": 256,
+      "storage_type": "SSD",
+      "screen_inches": 14.0,
+      "refresh_rate_hz": 60,
+      "panel_type": "IPS",
+      "os": "Windows 11 Home",
+      "warranty_months": 12,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/pc-gaming-rtx4060.html",
+    "source_product_id": "m3-003",
+    "sku": "SKU-M3-003",
+    "category": "desktop",
+    "subcategory": "pc-gaming",
+    "name": "PC Gaming E-Power RTX 4060 i5 16GB",
+    "brand": "E-Power",
+    "thumbnail_url": "https://example.com/m3-3.jpg",
+    "images": ["https://example.com/m3-3a.jpg"],
+    "prices": {
+      "list_price": 22990000,
+      "sale_price": 19990000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 3
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "PC gaming tầm trung với card đồ họa RTX 4060 8GB và CPU Intel Core i5.",
+    "breadcrumbs": ["Trang chủ", "PC", "PC Gaming"],
+    "raw_specs": {
+      "CPU": "Intel Core i5-13400F",
+      "RAM": "16GB DDR4",
+      "VGA": "NVIDIA RTX 4060 8GB"
+    },
+    "raw_html_path": "raw_html/m3-003.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "desktop",
+      "product_type": "PC Gaming",
+      "brand": "E-Power",
+      "model": "Gaming RTX 4060",
+      "cpu_model": "Intel Core i5-13400F",
+      "cpu_cores": 10,
+      "cpu_threads": 16,
+      "ram_gb": 16,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "storage_gb": 512,
+      "storage_type": "SSD",
+      "gpu_model": "NVIDIA RTX 4060",
+      "gpu_vram_gb": 8,
+      "form_factor": "ATX",
+      "psu_wattage_w": 550,
+      "warranty_months": 24,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/cpu-i5-13400.html",
+    "source_product_id": "m3-004",
+    "sku": "SKU-M3-004",
+    "category": "cpu",
+    "subcategory": null,
+    "name": "CPU Intel Core i5-13400 LGA1700",
+    "brand": "Intel",
+    "thumbnail_url": "https://example.com/m3-4.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 4900000,
+      "sale_price": 4490000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 18
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "CPU Intel Core i5-13400 socket LGA1700 10 nhân 16 luồng.",
+    "breadcrumbs": ["Trang chủ", "Linh kiện", "CPU"],
+    "raw_specs": {
+      "Số nhân": "10",
+      "Số luồng": "16",
+      "Socket": "LGA 1700"
+    },
+    "raw_html_path": "raw_html/m3-004.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "cpu",
+      "product_type": "CPU",
+      "brand": "Intel",
+      "model": "Core i5-13400",
+      "cpu_model": "Intel Core i5-13400",
+      "cpu_cores": 10,
+      "cpu_threads": 16,
+      "cpu_base_clock_ghz": 2.5,
+      "cpu_boost_clock_ghz": 4.6,
+      "socket": "LGA 1700",
+      "warranty_months": 36,
+      "confidence": 0.95,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/mainboard-b760-ddr4.html",
+    "source_product_id": "m3-005",
+    "sku": "SKU-M3-005",
+    "category": "mainboard",
+    "subcategory": null,
+    "name": "Mainboard MSI PRO B760M-A DDR4 LGA1700",
+    "brand": "MSI",
+    "thumbnail_url": "https://example.com/m3-5.jpg",
+    "images": ["https://example.com/m3-5a.jpg"],
+    "prices": {
+      "list_price": 3290000,
+      "sale_price": 2990000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 9
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "Bo mạch chủ MSI PRO B760M-A DDR4 hỗ trợ CPU Intel LGA1700 và RAM DDR4.",
+    "breadcrumbs": ["Trang chủ", "Linh kiện", "Mainboard"],
+    "raw_specs": {
+      "Socket": "LGA 1700",
+      "Chipset": "Intel B760",
+      "RAM hỗ trợ": "DDR4"
+    },
+    "raw_html_path": "raw_html/m3-005.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "mainboard",
+      "product_type": "Mainboard",
+      "brand": "MSI",
+      "model": "PRO B760M-A DDR4",
+      "socket": "LGA 1700",
+      "chipset": "Intel B760",
+      "form_factor": "Micro-ATX",
+      "ram_type": "DDR4",
+      "max_ram_gb": 128,
+      "ram_slots": 4,
+      "warranty_months": 36,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/ram-ddr4-16gb-3200.html",
+    "source_product_id": "m3-006",
+    "sku": "SKU-M3-006",
+    "category": "ram",
+    "subcategory": null,
+    "name": "RAM Kingston Fury Beast 16GB DDR4 3200MHz",
+    "brand": "Kingston",
+    "thumbnail_url": "https://example.com/m3-6.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 1190000,
+      "sale_price": 990000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 42
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "RAM Kingston Fury Beast DDR4 16GB bus 3200MHz tản nhiệt nhôm.",
+    "breadcrumbs": ["Trang chủ", "Linh kiện", "RAM"],
+    "raw_specs": {
+      "Dung lượng": "16GB",
+      "Loại": "DDR4",
+      "Bus": "3200MHz"
+    },
+    "raw_html_path": "raw_html/m3-006.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "ram",
+      "product_type": "RAM",
+      "brand": "Kingston",
+      "model": "Fury Beast 16GB DDR4 3200",
+      "ram_gb": 16,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "warranty_months": 36,
+      "confidence": 0.95,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/monitor-27-2k-165hz.html",
+    "source_product_id": "m3-007",
+    "sku": "SKU-M3-007",
+    "category": "monitor",
+    "subcategory": null,
+    "name": "Màn hình LG UltraGear 27 inch 2K 165Hz",
+    "brand": "LG",
+    "thumbnail_url": "https://example.com/m3-7.jpg",
+    "images": ["https://example.com/m3-7a.jpg"],
+    "prices": {
+      "list_price": 8490000,
+      "sale_price": 7190000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 7
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "Màn hình gaming 27 inch độ phân giải 2K tần số quét 165Hz tấm nền IPS.",
+    "breadcrumbs": ["Trang chủ", "Màn hình", "Màn hình gaming"],
+    "raw_specs": {
+      "Kích thước": "27 inch",
+      "Độ phân giải": "2560x1440",
+      "Tần số quét": "165Hz"
+    },
+    "raw_html_path": "raw_html/m3-007.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "monitor",
+      "product_type": "Monitor",
+      "brand": "LG",
+      "model": "27GP850-B",
+      "screen_inches": 27.0,
+      "resolution_label": "QHD",
+      "resolution_width": 2560,
+      "resolution_height": 1440,
+      "refresh_rate_hz": 165,
+      "panel_type": "IPS",
+      "warranty_months": 24,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m3-test.example.com/p/may-tinh-de-ban-van-phong.html",
+    "source_product_id": "m3-008",
+    "sku": "SKU-M3-008",
+    "category": "desktop",
+    "subcategory": "pc-van-phong",
+    "name": "Máy tính để bàn văn phòng HP ProDesk i5",
+    "brand": "HP",
+    "thumbnail_url": "https://example.com/m3-8.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 9990000,
+      "sale_price": 8790000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 4
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "Máy tính để bàn văn phòng HP ProDesk trang bị CPU Intel Core i5 và SSD 256GB.",
+    "breadcrumbs": ["Trang chủ", "Máy tính để bàn", "PC văn phòng"],
+    "raw_specs": {
+      "CPU": "Intel Core i5-12500",
+      "RAM": "8GB DDR4",
+      "Ổ cứng": "256GB SSD"
+    },
+    "raw_html_path": "raw_html/m3-008.html",
+    "crawled_at": "2026-06-20T10:00:00+0700",
+    "normalized_at": "2026-06-20T10:05:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "desktop",
+      "product_type": "PC Văn phòng",
+      "brand": "HP",
+      "model": "ProDesk 400 G7",
+      "cpu_model": "Intel Core i5-12500",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "ram_gb": 8,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "storage_gb": 256,
+      "storage_type": "SSD",
+      "form_factor": "Micro-ATX",
+      "warranty_months": 36,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  }
+]

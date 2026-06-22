@@ -1,0 +1,105 @@
+[
+  {
+    "source_url": "https://m2-test.example.com/p/resume-a-0-laptop.html",
+    "source_product_id": "resume-a-0",
+    "sku": "RESUME-A-0",
+    "category": "laptop",
+    "subcategory": "ultrabook",
+    "name": "Resume Test Laptop A0",
+    "brand": "BrandA",
+    "thumbnail_url": "https://example.com/r-a-0.jpg",
+    "images": [
+      "https://example.com/r-a-0-1.jpg",
+      "https://example.com/r-a-0-2.jpg"
+    ],
+    "prices": {
+      "list_price": 20000000,
+      "sale_price": 18000000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 7
+    },
+    "warranty": "Bảo hành 12 tháng",
+    "description": "MUTATED: sale_price changed 20M -> 18M, ram_gb 16 -> 32, description changed.",
+    "breadcrumbs": [
+      "Resume",
+      "A0"
+    ],
+    "raw_specs": {
+      "RAM": "32GB"
+    },
+    "raw_html_path": "raw_html/r-a-0.html",
+    "crawled_at": "2026-06-15T11:00:00+0700",
+    "normalized_at": "2026-06-16T04:00:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop",
+      "brand": "BrandA",
+      "model": "A0-Model-v2",
+      "cpu_model": "Intel Core i5-11400H",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "ram_gb": 32,
+      "ram_type": "DDR4",
+      "storage_gb": 512,
+      "storage_type": "SSD",
+      "warranty_months": 12,
+      "confidence": 0.91,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/resume-b-1-new-headphone.html",
+    "source_product_id": "resume-b-1",
+    "sku": "RESUME-B-1",
+    "category": "headset",
+    "subcategory": null,
+    "name": "Resume Test Headset B1",
+    "brand": "BrandD",
+    "thumbnail_url": "https://example.com/r-b-1.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 1500000,
+      "sale_price": 1290000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 30
+    },
+    "warranty": "Bảo hành 6 tháng",
+    "description": "Brand new headset, not in fixture A.",
+    "breadcrumbs": [
+      "Resume",
+      "B1"
+    ],
+    "raw_specs": {
+      "Kết nối": "USB"
+    },
+    "raw_html_path": "raw_html/r-b-1.html",
+    "crawled_at": "2026-06-15T12:00:00+0700",
+    "normalized_at": "2026-06-16T05:00:00+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "headset",
+      "product_type": "Headset",
+      "brand": "BrandD",
+      "model": "B1-Headset",
+      "connectivity": [
+        "USB",
+        "3.5mm"
+      ],
+      "weight_kg": 0.3,
+      "warranty_months": 6,
+      "confidence": 0.85,
+      "warnings": []
+    }
+  }
+]

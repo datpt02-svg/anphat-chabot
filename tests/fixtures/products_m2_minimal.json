@@ -1,0 +1,361 @@
+[
+  {
+    "source_url": "https://m2-test.example.com/p/test-laptop-gaming-pro.html",
+    "source_product_id": "test-001",
+    "sku": "SKU-MIN-001",
+    "category": "laptop",
+    "subcategory": "gaming",
+    "name": "Laptop \"Pro\"; -- comment with 'quotes' Đặc biệt",
+    "brand": "TestBrand",
+    "thumbnail_url": "https://example.com/thumb-1.jpg",
+    "images": [
+      "https://example.com/1.jpg",
+      "https://example.com/2.jpg"
+    ],
+    "prices": {
+      "list_price": 25000000,
+      "sale_price": 22000000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 5
+    },
+    "warranty": "Bảo hành 24 tháng chính hãng",
+    "description": "Laptop gaming cao cấp với CPU Intel thế hệ mới và card đồ họa rời.",
+    "breadcrumbs": [
+      "Trang chủ",
+      "Laptop",
+      "Gaming"
+    ],
+    "raw_specs": {
+      "CPU": "Intel Core i7-12700H",
+      "RAM": "16GB DDR4",
+      "Ổ cứng": "512GB SSD NVMe",
+      "VGA": "RTX 3060 6GB",
+      "Màn hình": "15.6 inch FHD 144Hz"
+    },
+    "raw_html_path": "raw_html/test-001.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop Gaming",
+      "brand": "TestBrand",
+      "model": "Pro-2026",
+      "cpu_model": "Intel Core i7-12700H",
+      "cpu_cores": 14,
+      "cpu_threads": 20,
+      "cpu_base_clock_ghz": 2.3,
+      "cpu_boost_clock_ghz": 4.7,
+      "ram_gb": 16,
+      "ram_type": "DDR4",
+      "ram_speed_mhz": 3200,
+      "max_ram_gb": 64,
+      "ram_slots": 2,
+      "ram_standard": "DDR4",
+      "storage_gb": 512,
+      "storage_type": "SSD",
+      "storage_detail": "NVMe PCIe Gen4",
+      "gpu_model": "NVIDIA RTX 3060",
+      "gpu_vram_gb": 6,
+      "gpu_vram_type": "GDDR6",
+      "screen_inches": 15.6,
+      "resolution_label": "FHD",
+      "resolution_width": 1920,
+      "resolution_height": 1080,
+      "refresh_rate_hz": 144,
+      "panel_type": "IPS",
+      "os": "Windows 11 Home",
+      "ports": [
+        "USB-C",
+        "HDMI",
+        "USB-A",
+        "3.5mm Audio"
+      ],
+      "connectivity": [
+        "Wi-Fi 6",
+        "Bluetooth 5.2"
+      ],
+      "warranty_months": 24,
+      "weight_kg": 2.3,
+      "confidence": 0.92,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/test-cpu-i5.html",
+    "source_product_id": "test-002",
+    "sku": "SKU-MIN-002",
+    "category": "cpu",
+    "subcategory": null,
+    "name": "CPU Intel Core i5-12400F",
+    "brand": "Intel",
+    "thumbnail_url": "https://example.com/thumb-2.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 4500000,
+      "sale_price": 3900000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 12
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "CPU Intel thế hệ 12 với 6 nhân 12 luồng.",
+    "breadcrumbs": [
+      "Trang chủ",
+      "Linh kiện",
+      "CPU"
+    ],
+    "raw_specs": {
+      "Số nhân": "6",
+      "Số luồng": "12",
+      "Socket": "LGA 1700"
+    },
+    "raw_html_path": "raw_html/test-002.html",
+    "crawled_at": null,
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "cpu",
+      "product_type": "CPU",
+      "brand": "Intel",
+      "model": "Core i5-12400F",
+      "cpu_model": "Intel Core i5-12400F",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "cpu_base_clock_ghz": 2.5,
+      "cpu_boost_clock_ghz": 4.4,
+      "socket": "LGA 1700",
+      "warranty_months": 36,
+      "confidence": 0.95,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/test-mainboard-b760.html",
+    "source_product_id": "test-003",
+    "sku": "SKU-MIN-003",
+    "category": "mainboard",
+    "subcategory": null,
+    "name": "Mainboard ASUS ROG Strix B760-F",
+    "brand": "ASUS",
+    "thumbnail_url": "https://example.com/thumb-3.jpg",
+    "images": [
+      "https://example.com/3.jpg"
+    ],
+    "prices": {
+      "list_price": 7200000,
+      "sale_price": 6500000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 8
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "Bo mạch chủ gaming cao cấp hỗ trợ DDR5 và PCIe 5.0.",
+    "breadcrumbs": [
+      "Trang chủ",
+      "Linh kiện",
+      "Mainboard"
+    ],
+    "raw_specs": {
+      "Socket": "LGA 1700",
+      "Chipset": "Intel B760",
+      "RAM hỗ trợ": "DDR5",
+      "Kích thước": "ATX"
+    },
+    "raw_html_path": "raw_html/test-003.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "mainboard",
+      "product_type": "Mainboard",
+      "brand": "ASUS",
+      "model": "ROG Strix B760-F Gaming WiFi",
+      "socket": "LGA 1700",
+      "chipset": "Intel B760",
+      "form_factor": "ATX",
+      "ram_type": "DDR5",
+      "max_ram_gb": 192,
+      "ram_slots": 4,
+      "supported_mainboard_form_factors": [
+        "ATX",
+        "Micro-ATX",
+        "Mini-ITX"
+      ],
+      "ports": [
+        "USB 3.2 Gen 2",
+        "USB-C",
+        "HDMI",
+        "DisplayPort",
+        "2.5G LAN",
+        "Wi-Fi 6E",
+        "Bluetooth 5.3"
+      ],
+      "connectivity": [
+        "Wi-Fi 6E",
+        "Bluetooth 5.3",
+        "2.5G Ethernet"
+      ],
+      "warranty_months": 36,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/test-monitor-27.html",
+    "source_product_id": "test-004",
+    "sku": "SKU-MIN-004",
+    "category": "monitor",
+    "subcategory": null,
+    "name": "Màn hình LG UltraGear 27 inch 2K 165Hz",
+    "brand": "LG",
+    "thumbnail_url": "https://example.com/thumb-4.jpg",
+    "images": [
+      "https://example.com/4.jpg",
+      "https://example.com/5.jpg"
+    ],
+    "prices": {
+      "list_price": 9500000,
+      "sale_price": null,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "out_of_stock",
+      "quantity": 0
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "Màn hình gaming 27 inch độ phân giải 2K tần số quét 165Hz.",
+    "breadcrumbs": [
+      "Trang chủ",
+      "Màn hình"
+    ],
+    "raw_specs": {
+      "Kích thước": "27 inch",
+      "Độ phân giải": "2560x1440",
+      "Tần số quét": "165Hz"
+    },
+    "raw_html_path": "raw_html/test-004.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "monitor",
+      "product_type": "Monitor",
+      "brand": "LG",
+      "model": "27GP850-B",
+      "screen_inches": 27.0,
+      "resolution_label": "QHD",
+      "resolution_width": 2560,
+      "resolution_height": 1440,
+      "refresh_rate_hz": 165,
+      "panel_type": "IPS",
+      "ports": [
+        "HDMI 2.0",
+        "DisplayPort 1.4",
+        "USB 3.0"
+      ],
+      "warranty_months": 24,
+      "confidence": 0.88,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/test-laptop-gaming-different.html",
+    "source_product_id": "test-005",
+    "sku": "SKU-MIN-005",
+    "category": "laptop",
+    "subcategory": "gaming",
+    "name": "Laptop \"Pro\"; -- comment with 'quotes' Đặc biệt",
+    "brand": "TestBrand",
+    "thumbnail_url": "https://example.com/thumb-5.jpg",
+    "images": [
+      "https://example.com/6.jpg"
+    ],
+    "prices": {
+      "list_price": 30000000,
+      "sale_price": 27500000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 3
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "Biến thể khác của Laptop Pro, cùng tên nhưng SKU khác.",
+    "breadcrumbs": [
+      "Trang chủ",
+      "Laptop",
+      "Gaming"
+    ],
+    "raw_specs": {
+      "CPU": "AMD Ryzen 7 6800H",
+      "RAM": "32GB DDR5"
+    },
+    "raw_html_path": "raw_html/test-005.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop Gaming",
+      "brand": "TestBrand",
+      "model": "Pro-AMD-2026",
+      "cpu_model": "AMD Ryzen 7 6800H",
+      "cpu_cores": 8,
+      "cpu_threads": 16,
+      "ram_gb": 32,
+      "ram_type": "DDR5",
+      "storage_gb": 1024,
+      "storage_type": "SSD",
+      "screen_inches": 16.0,
+      "refresh_rate_hz": 165,
+      "os": "Windows 11 Home",
+      "warranty_months": 24,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/test-invalid-no-name.html",
+    "source_product_id": "test-006",
+    "sku": "SKU-MIN-006",
+    "category": "other",
+    "name": null,
+    "brand": "TestBrand",
+    "thumbnail_url": null,
+    "images": [],
+    "prices": {
+      "list_price": null,
+      "sale_price": null,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "unknown",
+      "quantity": null
+    },
+    "warranty": null,
+    "description": null,
+    "breadcrumbs": [],
+    "raw_specs": {},
+    "validation_warnings": [],
+    "llm_warnings": []
+  }
+]

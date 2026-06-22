@@ -1,0 +1,151 @@
+[
+  {
+    "source_url": "https://m2-test.example.com/p/resume-a-0-laptop.html",
+    "source_product_id": "resume-a-0",
+    "sku": "RESUME-A-0",
+    "category": "laptop",
+    "subcategory": "ultrabook",
+    "name": "Resume Test Laptop A0",
+    "brand": "BrandA",
+    "thumbnail_url": "https://example.com/r-a-0.jpg",
+    "images": [
+      "https://example.com/r-a-0-1.jpg"
+    ],
+    "prices": {
+      "list_price": 20000000,
+      "sale_price": 20000000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 10
+    },
+    "warranty": "Bảo hành 12 tháng",
+    "description": "Initial state for resume test, will be mutated in fixture B.",
+    "breadcrumbs": [
+      "Resume",
+      "A0"
+    ],
+    "raw_specs": {
+      "RAM": "16GB"
+    },
+    "raw_html_path": "raw_html/r-a-0.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "laptop",
+      "product_type": "Laptop",
+      "brand": "BrandA",
+      "model": "A0-Model",
+      "cpu_model": "Intel Core i5-11400H",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "ram_gb": 16,
+      "ram_type": "DDR4",
+      "storage_gb": 512,
+      "storage_type": "SSD",
+      "warranty_months": 12,
+      "confidence": 0.9,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/resume-a-1-desktop.html",
+    "source_product_id": "resume-a-1",
+    "sku": "RESUME-A-1",
+    "category": "desktop_pc",
+    "subcategory": null,
+    "name": "Resume Test Desktop A1",
+    "brand": "BrandB",
+    "thumbnail_url": "https://example.com/r-a-1.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 15000000,
+      "sale_price": 14500000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 5
+    },
+    "warranty": "Bảo hành 24 tháng",
+    "description": "Desktop PC for resume test.",
+    "breadcrumbs": [
+      "Resume",
+      "A1"
+    ],
+    "raw_specs": {
+      "CPU": "Ryzen 5 5600"
+    },
+    "raw_html_path": "raw_html/r-a-1.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "desktop_pc",
+      "product_type": "Desktop PC",
+      "brand": "BrandB",
+      "model": "A1-Desktop",
+      "cpu_model": "AMD Ryzen 5 5600",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "ram_gb": 16,
+      "storage_gb": 256,
+      "warranty_months": 24,
+      "confidence": 0.88,
+      "warnings": []
+    }
+  },
+  {
+    "source_url": "https://m2-test.example.com/p/resume-a-2-cpu.html",
+    "source_product_id": "resume-a-2",
+    "sku": "RESUME-A-2",
+    "category": "cpu",
+    "subcategory": null,
+    "name": "Resume Test CPU A2",
+    "brand": "BrandC",
+    "thumbnail_url": "https://example.com/r-a-2.jpg",
+    "images": [],
+    "prices": {
+      "list_price": 5000000,
+      "sale_price": 4800000,
+      "build_pc_price": null,
+      "regional_price": null
+    },
+    "stock": {
+      "status": "in_stock",
+      "quantity": 20
+    },
+    "warranty": "Bảo hành 36 tháng",
+    "description": "CPU for resume test.",
+    "breadcrumbs": [
+      "Resume",
+      "A2"
+    ],
+    "raw_specs": {
+      "Socket": "AM4"
+    },
+    "raw_html_path": "raw_html/r-a-2.html",
+    "crawled_at": "2026-06-15T10:21:38+0700",
+    "normalized_at": "2026-06-16T03:22:50+0700",
+    "validation_warnings": [],
+    "llm_warnings": [],
+    "normalized_specs": {
+      "category": "cpu",
+      "product_type": "CPU",
+      "brand": "BrandC",
+      "model": "A2-CPU",
+      "cpu_model": "AMD Ryzen 5 5600X",
+      "cpu_cores": 6,
+      "cpu_threads": 12,
+      "warranty_months": 36,
+      "confidence": 0.95,
+      "warnings": []
+    }
+  }
+]

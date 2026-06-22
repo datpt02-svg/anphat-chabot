@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: paradedb/paradedb:0.15.26-pg16
+    container_name: anphat-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-anphat_commerce}
+      POSTGRES_USER: ${POSTGRES_USER:-anphat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-anphat_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-anphat} -d ${POSTGRES_DB:-anphat_commerce}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.14
+    container_name: anphat-meilisearch
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-anphat_meili_dev_master_key}
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "${MEILI_PORT:-7700}:7700"
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:7700/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
+  meili_data:
