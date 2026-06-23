@@ -87,6 +87,9 @@ TOOL_LABELS: dict[str, str] = {
     "compare_products": "Đang so sánh...",
     "explain_specs": "Đang giải thích thông số...",
     "read_crawl_debug": "Đang truy xuất dữ liệu nội bộ...",
+    "build_pc": "Đang gợi ý cấu hình PC...",
+    "check_compatibility": "Đang kiểm tra tương thích...",
+    "get_graph_neighbors": "Đang tra cứu sản phẩm liên quan...",
 }
 
 

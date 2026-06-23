@@ -78,13 +78,12 @@ class AnthropicProvider:
         model = self._get_model(name, max_tokens)
 
         if tier == "smart" and self.is_reasoning_model(name):
-            # Opus 4.1+: adaptive thinking + effort. Pass via `extra_body` to avoid
-            # LangChain rejecting unknown kwargs.
+            effort = opts.get("effort", "high")
             invoke_kwargs: dict[str, Any] = {
                 "messages": messages,
                 "max_tokens": max_tokens,
                 "thinking": {"type": "adaptive"},
-                "extra_body": {"output_config": {"effort": "high"}},
+                "extra_body": {"output_config": {"effort": effort}},
             }
         else:
             invoke_kwargs = {"messages": messages, "max_tokens": max_tokens}

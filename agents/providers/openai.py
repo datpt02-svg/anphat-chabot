@@ -94,7 +94,7 @@ class OpenAIProvider:
         }
 
         if tier == "smart" and self.is_reasoning_model(name):
-            invoke_kwargs["reasoning_effort"] = "high"
+            invoke_kwargs["reasoning_effort"] = opts.get("effort", "high")
 
         if tools:
             invoke_kwargs["tools"] = tools

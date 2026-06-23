@@ -47,6 +47,19 @@ GOLDEN_DATASET: list[dict[str, Any]] = [
     # Off-domain (2)
     {"query": "Hôm nay thời tiết Hà Nội thế nào?", "expected_intent": "clarify", "expected_tools": [], "expect_citation": False, "expect_refusal": True, "category": "off_domain"},
     {"query": "Kể tôi nghe về lịch sử Việt Nam", "expected_intent": "clarify", "expected_tools": [], "expect_citation": False, "expect_refusal": True, "category": "off_domain"},
+
+    # M5b: Build PC (3)
+    {"query": "Build PC gaming 30 triệu cho mình", "expected_intent": "build_pc", "expected_tools": ["build_pc"], "expect_citation": False, "expect_xhigh": True, "category": "build_pc"},
+    {"query": "Cấu hình PC văn phòng 15 triệu", "expected_intent": "build_pc", "expected_tools": ["build_pc"], "expect_citation": False, "expect_xhigh": True, "category": "build_pc"},
+    {"query": "Build PC làm video 50 triệu ưu tiên CPU mạnh", "expected_intent": "build_pc", "expected_tools": ["build_pc"], "expect_citation": False, "expect_xhigh": True, "category": "build_pc"},
+
+    # M5b: Check compatibility (2)
+    {"query": "CPU AMD Ryzen 5 này với mainboard ASUS này có chạy được không?", "expected_intent": "check_compat", "expected_tools": ["check_compatibility"], "expect_citation": False, "category": "check_compat"},
+    {"query": "Check tương thích: CPU Intel + Mainboard AMD socket AM5", "expected_intent": "check_compat", "expected_tools": ["check_compatibility"], "expect_citation": False, "expect_compat_fail": True, "category": "check_compat"},
+
+    # M5b: Find alternative (2)
+    {"query": "Tìm sản phẩm thay thế cho RTX 4060", "expected_intent": "find_alternative", "expected_tools": ["get_graph_neighbors"], "expect_citation": False, "category": "find_alternative"},
+    {"query": "CPU nào tương thích với mainboard này?", "expected_intent": "find_alternative", "expected_tools": ["get_graph_neighbors"], "expect_citation": False, "category": "find_alternative"},
 ]
 
 

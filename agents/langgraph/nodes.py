@@ -40,8 +40,11 @@ from agents.observability import (
 from agents.providers import get_provider
 from agents.security import PII_FOLLOWUP_MESSAGE, redact_pii
 from agents.tools import (
+    build_pc,
+    check_compatibility,
     compare_products,
     explain_specs,
+    get_graph_neighbors,
     get_product,
     read_crawl_debug,
     search_catalog,
@@ -55,6 +58,9 @@ _TOOL_REGISTRY = {
     "compare_products": compare_products,
     "explain_specs": explain_specs,
     "read_crawl_debug": read_crawl_debug,
+    "build_pc": build_pc,
+    "check_compatibility": check_compatibility,
+    "get_graph_neighbors": get_graph_neighbors,
 }
 
 SYSTEM_PROMPT = """Bạn là trợ lý mua sắm tại An Phát. Trả lời bằng tiếng Việt.
@@ -136,7 +142,11 @@ async def classify_intent_and_extract(state: AgentState, *, configurable: dict[s
 
     last_text = last_user.content if last_user and isinstance(last_user.content, str) else ""
     classify_prompt = (
-        "Phân loại intent của câu hỏi sau thành 1 trong: search | compare | explain | admin_debug | clarify. "
+        "Phân loại intent của câu hỏi sau thành 1 trong: "
+        "search | compare | explain | admin_debug | build_pc | check_compat | find_alternative | clarify. "
+        "build_pc: user muốn gợi ý cấu hình PC (có budget + use case). "
+        "check_compat: user hỏi các linh kiện này có tương thích không. "
+        "find_alternative: user tìm sản phẩm thay thế/tương đương. "
         "Trả về JSON `{\"intent\": \"...\", \"filters\": {...}, \"product_ids\": [...]}`.\n\n"
         f"Câu hỏi: {last_text}"
     )
@@ -162,14 +172,12 @@ async def classify_intent_and_extract(state: AgentState, *, configurable: dict[s
 
 
 def _intent_to_goto(intent: str) -> str:
-    if intent == "search":
-        return "retrieve_catalog"
-    if intent == "compare":
+    if intent in {"search", "compare", "admin_debug"}:
         return "retrieve_catalog"
     if intent == "explain":
         return "retrieve_chunks_fts"
-    if intent == "admin_debug":
-        return "retrieve_catalog"
+    if intent in {"build_pc", "check_compat", "find_alternative"}:
+        return "reason"
     return "handoff_or_clarify"
 
 
@@ -254,14 +262,25 @@ async def reason(state: AgentState, *, configurable: dict[str, Any]) -> dict[str
     """
     rc = _get_run_context(configurable)
     messages: list[Any] = [SystemMessage(content=SYSTEM_PROMPT), *state.messages]
+    acomplete_kwargs: dict[str, Any] = {
+        "messages": messages,
+        "tier": "smart",
+        "tools": [
+            search_catalog,
+            get_product,
+            compare_products,
+            explain_specs,
+            build_pc,
+            check_compatibility,
+            get_graph_neighbors,
+        ],
+    }
+    if state.user_intent == "build_pc":
+        acomplete_kwargs["effort"] = "xhigh"
     with _track_step(configurable, StepType.REASON) as step:
         try:
             response = await asyncio.wait_for(
-                get_provider().acomplete(
-                    messages=messages,
-                    tier="smart",
-                    tools=[search_catalog, get_product, compare_products, explain_specs],
-                ),
+                get_provider().acomplete(**acomplete_kwargs),
                 timeout=config.AGENT_NODE_TIMEOUT_S,
             )
             _attach_token_metadata(response, step)
