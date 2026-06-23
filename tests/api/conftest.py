@@ -105,6 +105,37 @@ async def client(app):
 
 
 @pytest.fixture
+def mounted_app(stub_graph):
+    """FastAPI app with the CopilotKit bridge mounted (uses real stub graph).
+
+    The default `app` fixture leaves `app.state.agent_graph = None`, so the
+    bridge's no-op path keeps `/api/copilotkit` unregistered. This fixture
+    sets the graph and calls `mount_copilotkit_bridge()` so the route IS
+    registered — required for tests that hit auth/budget/trace_id without
+    going through `app_with_stub`.
+    """
+    from api.main import create_app
+    from api.routes.copilotkit_bridge import mount_copilotkit_bridge
+
+    app = create_app()
+    app.state.agent_graph = stub_graph()
+    mount_copilotkit_bridge(app)
+    return app
+
+
+@pytest.fixture
+async def mounted_client(mounted_app):
+    """AsyncClient bound to `mounted_app`."""
+    transport = httpx.ASGITransport(app=mounted_app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as ac:
+        yield ac, mounted_app
+    # http_client may not be initialized (mounted_app has no lifespan).
+    hc = getattr(mounted_app.state, "http_client", None)
+    if hc is not None:
+        await hc.aclose()
+
+
+@pytest.fixture
 def override_db(app):
     from api.dependencies import get_db_conn
 
@@ -131,3 +162,40 @@ def override_http(app):
 
     yield _set
     app.dependency_overrides.pop(get_http_client, None)
+
+
+class _StubGraph:
+    """Real CompiledStateGraph that yields a canned AIMessage. Used by M7
+    bridge tests (was a plain stub in test_copilot.py before M7 deletion;
+    ag-ui `LangGraphAgent` requires a graph with `.nodes` attribute).
+
+    Tests can override the canned response by subclassing or by providing a
+    `response_text` arg.
+    """
+
+    def __init__(self, response_text: str = "stub reply") -> None:
+        self._response_text = response_text
+        # Build a real CompiledStateGraph with one node.
+        from langchain_core.messages import AIMessage
+        from langgraph.graph import END, START, MessagesState, StateGraph
+
+        def _call_model(state):
+            return {"messages": [AIMessage(content=self._response_text)]}
+
+        builder = StateGraph(MessagesState)
+        builder.add_node("agent", _call_model)
+        builder.add_edge(START, "agent")
+        builder.add_edge("agent", END)
+        self._graph = builder.compile()
+
+    def __getattr__(self, name: str) -> Any:
+        # Delegate graph-level access to the real CompiledStateGraph.
+        return getattr(self._graph, name)
+
+
+@pytest.fixture
+def stub_graph():
+    """Factory for `_StubGraph` — test instantiates with custom response text."""
+    def _make(response_text: str = "stub reply") -> _StubGraph:
+        return _StubGraph(response_text=response_text)
+    return _make

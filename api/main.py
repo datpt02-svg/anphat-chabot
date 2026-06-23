@@ -11,7 +11,8 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import get_cors_allowed_origins, lifespan
-from api.routes import copilot, health, products, search
+from api.routes import health, products, search
+from api.routes.copilotkit_bridge import mount_copilotkit_bridge
 from api.schemas import APIError, ErrorResponse
 
 logging.basicConfig(
@@ -24,7 +25,7 @@ logger = logging.getLogger("api")
 def create_app() -> FastAPI:
     app = FastAPI(
         title="An Phat Catalog API",
-        version="0.4.0",
+        version="0.5.0",
         lifespan=lifespan,
     )
 
@@ -35,7 +36,7 @@ def create_app() -> FastAPI:
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
-        expose_headers=["X-Trace-Id"],
+        expose_headers=["X-Trace-Id", "X-Run-Id", "X-Thread-Id", "Content-Type"],
     )
 
     @app.middleware("http")
@@ -94,7 +95,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(search.router)
     app.include_router(products.router)
-    app.include_router(copilot.router)
+    mount_copilotkit_bridge(app)
 
     return app
 

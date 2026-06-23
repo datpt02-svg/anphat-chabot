@@ -163,3 +163,20 @@ RATE_LIMIT_PER_MINUTE: int = 20
 
 # --- Clarify ---
 MAX_CLARIFY_COUNT: int = 2
+
+
+# --- M7: CopilotKit / ag-ui bridge ---
+COPILOTKIT_ENABLED: bool = (
+    (os.environ.get("COPILOTKIT_ENABLED") or "true").strip().lower() in {"1", "true", "yes", "on"}
+)
+COPILOTKIT_PATH: str = os.environ.get("COPILOTKIT_PATH") or "/api/copilotkit"
+COPILOTKIT_AGENT_NAME: str = (
+    os.environ.get("COPILOTKIT_AGENT_NAME") or "anphat-catalog"
+)
+COPILOTKIT_AGENT_DESCRIPTION: str = (
+    os.environ.get("COPILOTKIT_AGENT_DESCRIPTION") or "An Phat product catalog assistant"
+)
+# Dev-only: skip Bearer check. NEVER set true in prod.
+COPILOTKIT_DEV_AUTH_BYPASS: bool = (
+    (os.environ.get("COPILOTKIT_DEV_AUTH_BYPASS") or "false").strip().lower() in {"1", "true", "yes", "on"}
+)
