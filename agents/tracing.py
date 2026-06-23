@@ -46,6 +46,9 @@ class LocalFallbackHandler:
         self._root: list[_Span] = []
         self._session_id: str = ""
         self._user_id_hash: str | None = None
+        self._intent: str = ""
+        self._product_ids: list[str] = []
+        self._search_query: str = ""
         self._trace_id: str = uuid.uuid4().hex
 
     # --- public config hooks ---
@@ -54,6 +57,15 @@ class LocalFallbackHandler:
 
     def set_user(self, user_id_hash: str | None) -> None:
         self._user_id_hash = user_id_hash
+
+    def set_intent(self, intent: str) -> None:
+        self._intent = intent
+
+    def set_product_ids(self, product_ids: list[str]) -> None:
+        self._product_ids = list(product_ids)
+
+    def set_search_query(self, query: str) -> None:
+        self._search_query = query
 
     # --- BaseCallbackHandler-compatible shims ---
     def on_chain_start(
@@ -123,17 +135,23 @@ class LocalFallbackHandler:
         for span in self._root:
             logger.info(
                 "trace_event=%s",
-                json.dumps(_span_to_dict(span, self._trace_id, self._session_id, self._user_id_hash), default=str),
+                json.dumps(_span_to_dict(
+                    span, self._trace_id, self._session_id, self._user_id_hash,
+                    self._intent, self._product_ids, self._search_query,
+                ), default=str),
             )
         self._root = []
         self._stack = []
 
 
-def _span_to_dict(span: _Span, trace_id: str, session_id: str, user_id_hash: str | None) -> dict:
+def _span_to_dict(span: _Span, trace_id: str, session_id: str, user_id_hash: str | None, intent: str = "", product_ids: list[str] | None = None, search_query: str = "") -> dict:
     return {
         "trace_id": trace_id,
         "session_id": session_id,
         "user_id_hash": user_id_hash,
+        "intent": intent,
+        "product_ids": product_ids or [],
+        "search_query": search_query,
         "span_id": span.span_id,
         "parent_id": span.parent_id,
         "name": span.name,
@@ -142,11 +160,16 @@ def _span_to_dict(span: _Span, trace_id: str, session_id: str, user_id_hash: str
         "duration_ms": ((span.end or span.start) - span.start) * 1000,
         "metadata": span.metadata,
         "error": span.error,
-        "children": [_span_to_dict(c, trace_id, session_id, user_id_hash) for c in span.children],
+        "children": [_span_to_dict(c, trace_id, session_id, user_id_hash, intent, product_ids, search_query) for c in span.children],
     }
 
 
-def build_handler() -> Any:
+def build_handler(
+    *,
+    intent: str = "",
+    product_ids: list[str] | None = None,
+    search_query: str = "",
+) -> Any:
     """Return a Langfuse CallbackHandler if configured, else the local fallback.
 
     The local handler is always returned in dev to avoid surprise network
@@ -154,20 +177,42 @@ def build_handler() -> Any:
     """
     if not config.LANGFUSE_PUBLIC_KEY or not config.LANGFUSE_SECRET_KEY:
         logger.info("Langfuse not configured; using LocalFallbackHandler")
-        return LocalFallbackHandler()
+        h = LocalFallbackHandler()
+        h.set_intent(intent)
+        h.set_product_ids(product_ids or [])
+        h.set_search_query(search_query)
+        return h
     if config.LANGFUSE_SAMPLING_RATE < 1.0:
         import random
         if random.random() > config.LANGFUSE_SAMPLING_RATE:
             logger.debug("Langfuse sample skipped (rate=%s)", config.LANGFUSE_SAMPLING_RATE)
-            return LocalFallbackHandler()
+            h = LocalFallbackHandler()
+            h.set_intent(intent)
+            h.set_product_ids(product_ids or [])
+            h.set_search_query(search_query)
+            return h
     try:
         from langfuse.langchain import CallbackHandler
     except ImportError as exc:
         logger.warning("langfuse.langchain import failed (%s); using fallback", exc)
-        return LocalFallbackHandler()
+        h = LocalFallbackHandler()
+        h.set_intent(intent)
+        h.set_product_ids(product_ids or [])
+        h.set_search_query(search_query)
+        return h
+    tags = [
+        f"service:{config.LANGFUSE_SERVICE}",
+        f"env:{config.LANGFUSE_ENVIRONMENT}",
+    ]
+    if intent:
+        tags.append(f"intent:{intent}")
+    if product_ids:
+        tags.append(f"product_ids:{','.join(product_ids[:5])}")
+    if search_query:
+        tags.append(f"search_query:{search_query[:64]}")
     return CallbackHandler(
         public_key=config.LANGFUSE_PUBLIC_KEY,
         secret_key=config.LANGFUSE_SECRET_KEY,
         host=config.LANGFUSE_HOST or None,
-        tags=[f"service:{config.LANGFUSE_SERVICE}", f"env:{config.LANGFUSE_ENVIRONMENT}"],
+        tags=tags,
     )

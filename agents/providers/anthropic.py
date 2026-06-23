@@ -73,6 +73,12 @@ class AnthropicProvider:
         tools: list[Any] | None = None,
         **opts: Any,
     ) -> AIMessage:
+        _forbidden = {"budget_tokens", "temperature", "top_p", "top_k"}
+        bad = _forbidden.intersection(opts)
+        if bad:
+            raise ValueError(
+                f"forbidden params for Opus 4.8 adaptive thinking: {sorted(bad)}"
+            )
         name = self.resolve_model_name(tier)
         max_tokens = _max_tokens_for(tier)
         model = self._get_model(name, max_tokens)
@@ -100,9 +106,33 @@ class AnthropicProvider:
         tier: ModelTier,
         **opts: Any,
     ) -> AsyncIterator[AIMessage]:
-        # Streaming is only used for tier=smart; acomplete is fine for fast/balanced.
-        response = await self.acomplete(messages, tier=tier, tools=opts.get("tools"))
-        yield response
+        name = self.resolve_model_name(tier)
+        max_tokens = _max_tokens_for(tier)
+        model = self._get_model(name, max_tokens)
+
+        invoke_kwargs: dict[str, Any] = {"messages": messages, "max_tokens": max_tokens}
+        if tier == "smart" and self.is_reasoning_model(name):
+            effort = opts.get("effort", "high")
+            invoke_kwargs["thinking"] = {"type": "adaptive"}
+            invoke_kwargs["extra_body"] = {"output_config": {"effort": effort}}
+        if opts.get("tools"):
+            invoke_kwargs["tools"] = opts["tools"]
+
+        accumulated: AIMessage | None = None
+        async for chunk in model.astream(**invoke_kwargs):
+            if accumulated is None:
+                accumulated = chunk
+            else:
+                accumulated = accumulated + chunk
+            meta = getattr(chunk, "response_metadata", None) or {}
+            stop_reason = meta.get("stop_reason")
+            if stop_reason in {"end_turn", "tool_use", "pause_turn"}:
+                logger.info(
+                    "anthropic stream stop_reason=%s model=%s tier=%s",
+                    stop_reason, name, tier,
+                )
+        if accumulated is not None:
+            yield accumulated
 
 
 __all__ = ["AnthropicProvider"]

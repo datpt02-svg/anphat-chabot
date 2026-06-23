@@ -20,7 +20,7 @@ ANTHROPIC_DEFAULT_SONNET_MODEL: str = (
     os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL") or "claude-sonnet-4-5-20250929"
 )
 ANTHROPIC_DEFAULT_OPUS_MODEL: str = (
-    os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL") or "claude-opus-4-1-20250805"
+    os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL") or "claude-opus-4-8"
 )
 
 
@@ -85,7 +85,7 @@ def _validate_alias_conflicts() -> None:
 _DEFAULT_ANTHROPIC_VALUES: dict[str, str] = {
     "claude-haiku-4-5-20251001": "claude-haiku-4-5-20251001",
     "claude-sonnet-4-5-20250929": "claude-sonnet-4-5-20250929",
-    "claude-opus-4-1-20250805": "claude-opus-4-1-20250805",
+    "claude-opus-4-8": "claude-opus-4-8",
 }
 
 _validate_alias_conflicts()
