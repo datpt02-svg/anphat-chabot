@@ -7,6 +7,14 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
+
+# Load .env at module import time so `LLM_PROVIDER`, `OPENAI_*`, and the
+# `ANTHROPIC_DEFAULT_*` aliases below are populated *before* the validation
+# in `_validate_alias_conflicts()`. Without this, session-inherited env vars
+# (e.g. `LLM_PROVIDER=minimax-go`) win over the `.env` we want to apply.
+load_dotenv(override=False)
+
 from agents.secrets import bootstrap as _bootstrap_secrets
 
 _bootstrap_secrets()

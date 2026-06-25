@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import get_cors_allowed_origins, lifespan
 from api.routes import health, products, search
-from api.routes.copilotkit_bridge import mount_copilotkit_bridge
+from api.routes.copilotkit_bridge import register_copilotkit_auth_middleware
 from api.schemas import APIError, ErrorResponse
 
 logging.basicConfig(
@@ -27,6 +27,12 @@ def create_app() -> FastAPI:
         title="An Phat Catalog API",
         version="0.5.0",
         lifespan=lifespan,
+        # `add_fastapi_endpoint` mounts `/api/copilotkit/{path:path}`, so
+        # `/api/copilotkit` (no path) gets a 307 redirect to `/api/copilotkit/`.
+        # Browsers honour that redirect for the CORS-preflighted POST and it
+        # works locally, but dev tools + some CopilotKit client paths trip
+        # on it. Disable trailing-slash redirects — the SDK accepts both.
+        redirect_slashes=False,
     )
 
     origins = get_cors_allowed_origins()
@@ -95,7 +101,24 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(search.router)
     app.include_router(products.router)
-    mount_copilotkit_bridge(app)
+    from api.routes import build_pc as build_pc_route
+    from api.routes import categories as categories_route
+
+    app.include_router(build_pc_route.router)
+    app.include_router(categories_route.router)
+    # Auth+budget middleware for /api/copilotkit must be registered here
+    # (before app start). The ag-ui endpoint itself is mounted from the
+    # lifespan after the M5 graph compiles — see api/dependencies.py.
+    register_copilotkit_auth_middleware(app)
+
+    # Mount the CopilotKit GraphQL proxy here so the route is registered
+    # at app construction. The GraphQL resolver looks up the agent
+    # instance from `app.state.copilotkit_agents` at request time, so
+    # the M5 graph doesn't need to be compiled here — it will be
+    # populated by the lifespan.
+    from api.routes.copilotkit_graphql import mount_copilotkit_graphql
+    from agents import config as agent_config
+    mount_copilotkit_graphql(app, agent_config.COPILOTKIT_PATH)
 
     return app
 

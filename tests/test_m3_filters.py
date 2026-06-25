@@ -113,7 +113,7 @@ def test_unknown_filter_lists_all_unknown():
     msg = str(exc.value)
     assert "bar" in msg
     assert "foo" in msg
-    assert "category" not in msg  # valid one should not be in the message
+    assert "category" not in msg
 
 
 # --- build_sort ------------------------------------------------------------

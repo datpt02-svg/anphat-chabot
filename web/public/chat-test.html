@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>An Phát — Chat test (ag-ui SSE)</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font: 14px/1.5 system-ui, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
+      h1 { font-size: 22px; }
+      .muted { color: #888; font-size: 12px; }
+      .chat { border: 1px solid #ccc; border-radius: 8px; padding: 12px; min-height: 320px; }
+      .msg { margin: 8px 0; padding: 8px 10px; border-radius: 6px; }
+      .user { background: #eef; }
+      .assistant { background: #efe; white-space: pre-wrap; }
+      .event { background: #f4f4f4; font-family: ui-monospace, monospace; font-size: 11px; color: #555; }
+      .event-error { background: #fee; color: #900; }
+      form { display: flex; gap: 8px; margin-top: 12px; }
+      input { flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid #888; }
+      button { padding: 8px 14px; border-radius: 6px; border: 1px solid #888; background: #f6f6f6; cursor: pointer; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+  </head>
+  <body>
+    <h1>An Phát — Chat test (ag-ui SSE)</h1>
+    <p class="muted">
+      Backend: <code id="endpoint"></code> · Thread: <code id="thread"></code> · Agent: <code id="agent"></code>
+    </p>
+    <div class="chat" id="chat"></div>
+    <form id="form">
+      <input id="input" placeholder="Nhập câu hỏi rồi Enter..." autocomplete="off" />
+      <button type="submit" id="send">Gửi</button>
+    </form>
+    <p class="muted">
+      Mỗi dòng server stream (SSE) sẽ render như 1 thẻ <code>event</code>. Assistant text cuối cùng gom từ <code>final_response</code> trong
+      <code>STATE_SNAPSHOT</code>.
+    </p>
+    <script>
+      const apiBase = window.location.origin.replace(":3000", ":8000");
+      const agentName = "anphat-catalog";
+      const endpoint = apiBase + "/api/copilotkit/agent/" + agentName;
+      document.getElementById("endpoint").textContent = endpoint;
+      document.getElementById("agent").textContent = agentName;
+      const threadId = crypto.randomUUID();
+      document.getElementById("thread").textContent = threadId;
+
+      const chat = document.getElementById("chat");
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const send = document.getElementById("send");
+
+      function append(html, cls = "") {
+        const div = document.createElement("div");
+        div.className = "msg " + cls;
+        div.innerHTML = html;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        return div;
+      }
+
+      async function sendMessage(text) {
+        if (!text.trim()) return;
+        append(escapeHtml(text), "user");
+        input.value = "";
+        send.disabled = true;
+        const placeholder = append('<span class="muted">… đang chờ phản hồi</span>', "assistant");
+        const seenText = new Set();
+        let finalText = null;
+
+        const body = {
+          threadId,
+          nodeName: "",
+          state: {},
+          messages: [{ id: "m-" + Date.now(), role: "user", content: text }],
+          actions: [],
+        };
+
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok || !res.body) {
+            const txt = await res.text();
+            placeholder.className = "msg event event-error";
+            placeholder.textContent = "HTTP " + res.status + ": " + txt.slice(0, 500);
+            return;
+          }
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+          let evCount = 0;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            // SSE: events separated by blank line, each event has 1+ `data:` lines.
+            let idx;
+            while ((idx = buf.indexOf("\n\n")) >= 0) {
+              const raw = buf.slice(0, idx);
+              buf = buf.slice(idx + 2);
+              const dataLines = raw
+                .split("\n")
+                .filter((l) => l.startsWith("data:"))
+                .map((l) => l.slice(5).trim());
+              if (dataLines.length === 0) continue;
+              const payload = dataLines.join("\n");
+              evCount++;
+              let parsed = null;
+              try { parsed = JSON.parse(payload); } catch { /* not json */ }
+              if (!parsed) {
+                append(escapeHtml(payload.slice(0, 300)), "event");
+                continue;
+              }
+              const ev = formatEvent(parsed);
+              if (ev.assistantDelta) {
+                // Stream-style delta — append into placeholder.
+                if (finalText === null) finalText = "";
+                finalText += ev.assistantDelta;
+                placeholder.textContent = finalText;
+              } else if (ev.kind === "final") {
+                finalText = ev.text;
+                placeholder.textContent = ev.text;
+              } else if (ev.kind === "error") {
+                placeholder.className = "msg event event-error";
+                placeholder.textContent = ev.text;
+              } else if (ev.raw) {
+                append(escapeHtml(ev.raw), "event");
+              }
+            }
+          }
+          if (finalText === null) {
+            placeholder.className = "msg event";
+            placeholder.textContent = "(no assistant text emitted; " + evCount + " events)";
+          } else {
+            placeholder.className = "msg assistant";
+          }
+        } catch (err) {
+          placeholder.className = "msg event event-error";
+          placeholder.textContent = String(err);
+        } finally {
+          send.disabled = false;
+          input.focus();
+        }
+      }
+
+      function formatEvent(e) {
+        // ag-ui event types
+        switch (e.type) {
+          case "TEXT_MESSAGE_CONTENT":
+            return { kind: "delta", assistantDelta: e.delta || "" };
+          case "TEXT_MESSAGE_START":
+            return { kind: "meta", raw: "[TEXT_MESSAGE_START] id=" + (e.messageId || "") };
+          case "TEXT_MESSAGE_END":
+            return { kind: "meta", raw: "[TEXT_MESSAGE_END]" };
+          case "STATE_SNAPSHOT": {
+            const st = e.snapshot || {};
+            if (typeof st.final_response === "string" && st.final_response) {
+              return { kind: "final", text: st.final_response };
+            }
+            return { kind: "raw", raw: "[STATE_SNAPSHOT] " + JSON.stringify(st).slice(0, 200) };
+          }
+          case "MESSAGES_SNAPSHOT":
+            return { kind: "raw", raw: "[MESSAGES_SNAPSHOT] " + (e.messages || []).length + " msg" };
+          case "RUN_STARTED":
+            return { kind: "raw", raw: "[RUN_STARTED] runId=" + e.runId };
+          case "RUN_FINISHED":
+            return { kind: "raw", raw: "[RUN_FINISHED]" };
+          case "RUN_ERROR":
+            return { kind: "error", text: e.message || "(no message)" };
+          case "STEP_STARTED":
+            return { kind: "raw", raw: "[STEP_STARTED] " + (e.stepName || "") };
+          case "STEP_FINISHED":
+            return { kind: "raw", raw: "[STEP_FINISHED] " + (e.stepName || "") };
+          case "TOOL_CALL_START":
+            return { kind: "raw", raw: "[TOOL_CALL_START] " + (e.toolCallName || "") };
+          case "TOOL_CALL_END":
+            return { kind: "raw", raw: "[TOOL_CALL_END]" };
+          case "TOOL_CALL_RESULT":
+            return { kind: "raw", raw: "[TOOL_CALL_RESULT] " + String(e.content || "").slice(0, 200) };
+          case "RAW":
+            return { kind: "raw", raw: "[RAW] " + (e.event?.event || "?") };
+          default:
+            return { kind: "raw", raw: "[" + (e.type || "?") + "]" };
+        }
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        sendMessage(input.value);
+      });
+      input.focus();
+    </script>
+  </body>
+</html>

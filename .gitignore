@@ -20,3 +20,22 @@ data
 .pytest_cache
 *.pyc
 __pycache__/
+
+# M8a: Next.js / Node
+web/node_modules/
+web/.next/
+web/dist/
+web/.pnpm-store/
+node_modules/
+.next/
+.pnpm-store/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+.playwright-mcp
+web/test-results/

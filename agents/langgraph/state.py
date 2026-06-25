@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict
 from langchain_core.messages import BaseMessage
+from langgraph.graph import add_messages
 
 
 class ProductSummary(BaseModel):
@@ -52,7 +54,13 @@ class AgentState(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     state_version: int = 1
-    messages: list[BaseMessage] = []
+    # `messages` uses LangGraph's `add_messages` reducer so that
+    # returning `{"messages": [new_msg]}` from a node APPENDS to the
+    # channel rather than replacing it. Without the reducer, each
+    # node's response overwrites the previous turn's history — which
+    # is what triggered the `messages must not be empty` rejection from
+    # `minimax-m3` after the first reason/call_tool cycle.
+    messages: Annotated[list[BaseMessage], add_messages] = []
     user_intent: str = ""
     filters: dict = {}
     retrieved_products: list[ProductSummary] = []

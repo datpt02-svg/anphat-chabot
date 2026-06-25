@@ -14,10 +14,22 @@ from fastapi import FastAPI, Request
 from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
 
+
+# Import the CopilotKit GraphQL proxy module up-front so the import-time
+# parser patch in `copilotkit_graphql._install_noop_directives()` runs
+# before any request handler is invoked. Without this, the patch is
+# only applied when the lifespan handler reaches the GraphQL mount
+# step, which may not happen for non-GraphQL probes and still leaves
+# the request handler using a pristine graphql.parse for the first
+# chat request.
+from api.routes import copilotkit_graphql as _copilotkit_graphql_module  # noqa: F401, E402
+
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 load_dotenv(override=False)
+
+from agents import config as agent_config  # noqa: E402  (after load_dotenv)
 
 logger = logging.getLogger("api.dependencies")
 
@@ -100,6 +112,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.agent_graph = compile(checkpointer=checkpointer)
         app.state.agent_tools = ALL_TOOLS
         logger.info("M5 agent graph compiled")
+        # M7: mount CopilotKit bridge AFTER graph is compiled so the runtime
+        # endpoint sees a non-None `app.state.agent_graph`.
+        from api.routes.copilotkit_bridge import mount_copilotkit_bridge
+
+        mount_copilotkit_bridge(app)
+        # Note: `mount_copilotkit_graphql` is invoked from `create_app()`
+        # in api/main.py so the GraphQL route is registered at
+        # construction time. The GraphQL resolver reads
+        # `app.state.copilotkit_agents` lazily at request time, so we
+        # just need to populate that list once the bridge is mounted.
     except Exception as exc:
         logger.warning("M5 agent graph disabled: %s", exc)
         app.state.checkpoint_pool = None

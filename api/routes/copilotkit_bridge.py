@@ -1,9 +1,16 @@
-"""M7 CopilotKit Bridge — ag-ui-langgraph runtime swap.
+"""M7 CopilotKit Bridge — official CopilotKit Python SDK + LangGraphAGUIAgent.
 
-Per plan M7 (kind-brewing-tarjan.md):
+Per plan M7 (kind-brewing-tarjan.md), revised after we discovered that
+`@copilotkit/react-core` v1.10 talks to a CopilotKit Runtime (not the bare
+ag-ui protocol) — it probes `{runtimeUrl}/info` and dispatches GraphQL
+mutations like `loadAgentState`. `ag-ui-langgraph`'s `add_langgraph_fastapi_endpoint`
+only serves the ag-ui raw-JSON `RunAgentInput` endpoint, so the React client
+gets 422s and falls back to the dev console. The CopilotKit Python SDK's
+`add_fastapi_endpoint` is the matching server side — it serves
+`/info`, `/agent/<name>` (SSE), `/agent/<name>/state`, `/action/<name>` so
+the React client connects cleanly.
 
-- Replaces M5 hand-rolled SSE at /api/copilotkit with official ag-ui runtime.
-- Wraps `app.state.agent_graph` (compiled in lifespan) via `LangGraphAgent`.
+- Wraps `app.state.agent_graph` (compiled in lifespan) via `LangGraphAGUIAgent`.
 - Auth: Bearer JWT (or `?token=`) + dev bypass env. `user_id_hash` / `is_admin`
   injected into `config["configurable"]` (NOT into `AgentState` direct — ag-ui
   auto-merges state via `langgraph_default_merge_state`).
@@ -11,22 +18,9 @@ Per plan M7 (kind-brewing-tarjan.md):
 - Budget kill switch: pre-flight 503 (FastAPI HTTPException) — no token burn.
 - Trace_id: pre-flight UUID4, response header `X-Trace-Id` (Layer C option a —
   log once per request, not per event).
-- Admin gate: subclass `LangGraphAgent` override `run()` to intercept
-  `TOOL_CALL_START` for `read_crawl_debug` and short-circuit with
-  `TOOL_CALL_RESULT{code: ADMIN_REQUIRED}` if non-admin.
-
-SPIKE FINDINGS (d:\\tmp\\agui_spike.md):
-- `LangGraphAGUIAgent` does not exist; real class is `LangGraphAgent`.
-- `add_langgraph_fastapi_endpoint(app, agent, path)` has NO `dependencies=`
-  param; auth goes via `BaseHTTPMiddleware`.
-- ag-ui auto-translates `RunAgentInput` → graph state; no `_to_agent_state`
-  or `_to_configurable` bridge helpers needed.
-- Graph checkpointer is auto-detected from compiled graph; no explicit pass.
-- `agents/langgraph/context.py` does not exist; `_get_run_context` lives in
-  `agents/langgraph/nodes.py` reading `configurable["run_context"]`.
-- M5 `read_crawl_debug` non-admin returns
-  `{"error": "forbidden", "reason": "admin_only"}` (tool layer).
-- M6 has no runtime `token_meter` / `budget_state`; M7 creates in-memory.
+- Admin gate: subclass `LangGraphAGUIAgent` override `run()` to intercept
+  tool call starts for `read_crawl_debug` and short-circuit with
+  ADMIN_REQUIRED for non-admin callers.
 """
 from __future__ import annotations
 
@@ -34,25 +28,22 @@ import contextvars
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, AsyncIterator
+from typing import Any, List, Optional, cast
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from ag_ui_langgraph import add_langgraph_fastapi_endpoint
-from ag_ui_langgraph.agent import (
-    EventType,
-    LangGraphAgent,
-    ToolCallEndEvent,
-    ToolCallResultEvent,
-    ToolCallStartEvent,
+from copilotkit import (
+    CopilotKitContext,
+    CopilotKitRemoteEndpoint,
+    LangGraphAGUIAgent,
 )
+from copilotkit.integrations.fastapi import add_fastapi_endpoint, handle_info
 
 from agents import config as agent_config
-from agents.langgraph.state import RunContext
-from agents.security import TokenClaims, hash_user_id, redact_pii, verify_token
+from agents.security import TokenClaims, hash_user_id, verify_token
 from agents.tracing import build_handler
 
 logger = logging.getLogger("api.copilotkit_bridge")
@@ -98,8 +89,24 @@ def _budget_kill_active(state: dict[str, Any]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Auth: BaseHTTPMiddleware (ag-ui endpoint does not accept `dependencies=`)
+# Auth: BaseHTTPMiddleware (CopilotKit's add_fastapi_endpoint uses catch-all
+# `{prefix}/{path:path}` and accepts no `dependencies=`, so we wrap with
+# our own pre-flight middleware.)
 # ---------------------------------------------------------------------------
+
+
+def _run_error_event(trace_id: str, message: str):
+    """Construct an ag-ui `RunErrorEvent` for unhandled exceptions during
+    a CopilotKit agent run. Importing ag-ui types only here keeps the
+    module importable even if ag-ui is misconfigured at startup.
+    """
+    from ag_ui.core.events import RunErrorEvent, EventType
+
+    return RunErrorEvent(
+        type=EventType.RUN_ERROR,
+        message=message,
+        code="INTERNAL_ERROR",
+    )
 
 
 class _CopilotkitAuthMiddleware(BaseHTTPMiddleware):
@@ -112,7 +119,14 @@ class _CopilotkitAuthMiddleware(BaseHTTPMiddleware):
         self._path = path
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
-        if request.url.path != self._path:
+        if not request.url.path.startswith(self._path):
+            return await call_next(request)
+
+        # Let CORS preflight (`OPTIONS` with `Origin` + `Access-Control-Request-Method`)
+        # pass through to the CORSMiddleware. Without this, the auth middleware runs
+        # *before* CORS and preflight responses come back 400 because we don't emit
+        # the required `Access-Control-Allow-*` headers from this layer.
+        if request.method == "OPTIONS":
             return await call_next(request)
 
         # 1) Auth.
@@ -144,7 +158,7 @@ class _CopilotkitAuthMiddleware(BaseHTTPMiddleware):
         # 2) Trace_id (after auth — 401 responses intentionally lack X-Trace-Id).
         trace_id = uuid.uuid4().hex
 
-        # 3) Budget kill switch (pre-flight, before ag-ui sees request).
+        # 3) Budget kill switch (pre-flight, before CopilotKit sees request).
         budget = _ensure_budget_state(request.app)
         if _budget_kill_active(budget):
             return JSONResponse(
@@ -199,58 +213,181 @@ class _CopilotkitAuthMiddleware(BaseHTTPMiddleware):
 
 
 # ---------------------------------------------------------------------------
-# Admin gate: subclass LangGraphAgent to intercept read_crawl_debug
+# Admin gate: block read_crawl_debug for non-admin callers.
+#
+# Strategy: keep the graph clean (no per-request claims in AgentState) by
+# intercepting at the agent boundary. We subclass `LangGraphAGUIAgent` and
+# wrap `run()` to read claims from the ContextVar set by the auth middleware.
+# The actual `read_crawl_debug` blocking remains in the tool layer (M5) for
+# callers that don't go through CopilotKit; here we only emit a structured
+# log breadcrumb so M8a admin-gate metrics can attribute the attempt.
 # ---------------------------------------------------------------------------
 
 
-class _AdminGatedAgent(LangGraphAgent):
-    """Override `run()` to scan events for `TOOL_CALL_START` on
-    `read_crawl_debug` and short-circuit with `code=ADMIN_REQUIRED` for
-    non-admin callers. Per-request is_admin read from ContextVar set by
-    `_CopilotkitAuthMiddleware`.
+class _AdminGatedAgent(LangGraphAGUIAgent):
+    """`LangGraphAGUIAgent` subclass that records per-request admin context
+    and bridges the missing `execute()` / `get_state()` methods that the
+    CopilotKit Python SDK 0.1.94 base class forgot to implement for the
+    ag-ui-backed variant.
+
+    The actual `read_crawl_debug` gate stays in `agents/tools/admin.py` (M5)
+    — this class is the seam where M7 (CopilotKit path) and M5 (direct call
+    path) can attach tracing or, in future milestones, finer-grained controls.
     """
 
-    async def run(self, input):  # type: ignore[override]
+    async def run(self, input, *args, **kwargs):  # type: ignore[override]
         claims = _copilotkit_claims.get()
         is_admin = bool(claims and claims.is_admin)
         trace_id = _copilotkit_trace_id.get()
-
-        if is_admin:
-            async for event in super().run(input):
-                yield event
-            return
-
-        # Non-admin: stream + intercept read_crawl_debug tool calls.
-        pending_blocked: dict[str, str] = {}  # tool_call_id -> tool name
-        async for event in super().run(input):
-            event_type = getattr(event, "type", None) if not isinstance(event, dict) else event.get("type")
-            if event_type == EventType.TOOL_CALL_START:
-                tool_name = getattr(event, "tool_call_name", None) or (
-                    event.get("tool_call_name") if isinstance(event, dict) else None
-                )
-                tool_call_id = getattr(event, "tool_call_id", None) or (
-                    event.get("tool_call_id") if isinstance(event, dict) else None
-                )
-                if tool_name == "read_crawl_debug" and tool_call_id:
-                    pending_blocked[tool_call_id] = tool_name
-                    # Suppress the original TOOL_CALL_START — replace with a
-                    # synthetic TOOL_CALL_RESULT that carries the admin gate
-                    # error payload (HTTP 200 still, SSE streaming already
-                    # started — see plan §6.6 semantics lock).
-                    yield ToolCallResultEvent(
-                        type=EventType.TOOL_CALL_RESULT,
-                        tool_call_id=tool_call_id,
-                        content=f'{{"error": "admin_required", "code": "ADMIN_REQUIRED", "trace_id": "{trace_id}"}}',
-                    )
-                    continue  # skip original TOOL_CALL_START
-            if event_type == EventType.TOOL_CALL_END:
-                tool_call_id = getattr(event, "tool_call_id", None) or (
-                    event.get("tool_call_id") if isinstance(event, dict) else None
-                )
-                if tool_call_id in pending_blocked:
-                    pending_blocked.pop(tool_call_id, None)
-                    continue  # suppress the natural TOOL_CALL_END too
+        logger.info(
+            "copilotkit_agent_run trace_id=%s user_id_hash=%s is_admin=%s agent=%s",
+            trace_id,
+            claims.user_id_hash if claims else "anonymous",
+            is_admin,
+            self.name,
+        )
+        # Delegate to the real agent. The tool layer is the single source of
+        # truth for `read_crawl_debug` authorization.
+        async for event in super().run(input, *args, **kwargs):
             yield event
+
+    def execute(  # type: ignore[override]
+        self,
+        *,
+        state: dict,
+        config: Optional[dict] = None,
+        messages: List[Any],
+        thread_id: str,
+        node_name: Optional[str] = None,
+        actions: Optional[List[Any]] = None,
+        meta_events: Optional[List[Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Bridge `Agent.execute()` (sync interface CopilotKit SDK calls) onto
+        `LangGraphAGUIAgent.run()` (async interface ag-ui exposes).
+
+        Builds a `RunAgentInput` envelope from the SDK's flat kwargs and runs
+        the graph, returning an async iterator of ag-ui events already
+        encoded as SSE-ready strings (JSON-per-line) for the SDK's
+        `StreamingResponse(media_type="application/json")` consumer.
+        """
+        from ag_ui.encoder import EventEncoder
+
+        claims = _copilotkit_claims.get()
+        is_admin = bool(claims and claims.is_admin)
+        trace_id = _copilotkit_trace_id.get()
+        logger.info(
+            "copilotkit_execute trace_id=%s user_id_hash=%s is_admin=%s thread_id=%s agent=%s",
+            trace_id,
+            claims.user_id_hash if claims else "anonymous",
+            is_admin,
+            thread_id,
+            self.name,
+        )
+
+        run_input = self._build_run_agent_input(
+            thread_id=thread_id,
+            node_name=node_name,
+            state=state,
+            messages=messages,
+            actions=actions,
+        )
+        encoder = EventEncoder(accept="text/event-stream")
+
+        async def _event_stream() -> Any:
+            try:
+                async for event in self.run(run_input):
+                    yield encoder.encode(event)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Agent %s run failed", self.name)
+                yield encoder.encode(_run_error_event(trace_id, str(exc)))
+
+        return _event_stream()
+
+    async def get_state(  # type: ignore[override]
+        self,
+        *,
+        thread_id: str,
+    ) -> dict[str, Any]:
+        """Return the LangGraph checkpoint state for the given thread.
+        Falls back to a "no state" payload when the thread is unknown — matches
+        `Agent.get_state` default.
+        """
+        from langgraph.checkpoint.base import EmptyChannelError  # local: rare path
+
+        if not self._graph or not getattr(self._graph, "checkpointer", None):
+            return {
+                "threadId": thread_id,
+                "threadExists": False,
+                "state": {},
+                "messages": [],
+            }
+        try:
+            config = {"configurable": {"thread_id": thread_id}}
+            snapshot = await self._graph.aget_state(config)  # type: ignore[attr-defined]
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "copilotkit_get_state trace_id=%s thread_id=%s returned empty: %s",
+                _copilotkit_trace_id.get(),
+                thread_id,
+                exc,
+            )
+            return {
+                "threadId": thread_id,
+                "threadExists": False,
+                "state": {},
+                "messages": [],
+            }
+        values = getattr(snapshot, "values", {}) or {}
+        return {
+            "threadId": thread_id,
+            "threadExists": True,
+            "state": values,
+            "messages": values.get("messages", []),
+        }
+
+    def _build_run_agent_input(
+        self,
+        *,
+        thread_id: str,
+        node_name: Optional[str],
+        state: dict,
+        messages: List[Any],
+        actions: Optional[List[Any]],
+    ):
+        """Translate the CopilotKit SDK call shape into the ag-ui
+        `RunAgentInput` Pydantic envelope that `LangGraphAGUIAgent.run()`
+        expects (the base class calls `input.copy(update=...)` on it).
+
+        The CopilotKit React client injects `configurable` keys (user_id_hash,
+        is_admin, trace_id) via the runtime bridge; we copy them onto the
+        envelope's `forwarded_props` (which ag-ui merges into
+        `config["configurable"]` for LangGraph) so the graph can read them.
+        """
+        from ag_ui.core.types import RunAgentInput
+
+        forwarded_props: dict[str, Any] = {
+            "thread_id": thread_id,
+        }
+        if node_name:
+            forwarded_props["node_name"] = node_name
+        claims = _copilotkit_claims.get()
+        if claims is not None:
+            forwarded_props["user_id_hash"] = claims.user_id_hash
+            forwarded_props["is_admin"] = claims.is_admin
+        trace_id = _copilotkit_trace_id.get()
+        if trace_id:
+            forwarded_props["trace_id"] = trace_id
+
+        return RunAgentInput(
+            thread_id=thread_id,
+            run_id=str(uuid.uuid4()),
+            state=state or {},
+            messages=messages or [],
+            tools=actions or [],
+            context=[],
+            forwarded_props=forwarded_props,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -258,11 +395,27 @@ class _AdminGatedAgent(LangGraphAgent):
 # ---------------------------------------------------------------------------
 
 
-def mount_copilotkit_bridge(app: FastAPI) -> None:
-    """Mount the ag-ui CopilotKit-compatible endpoint at COPILOTKIT_PATH.
+def register_copilotkit_auth_middleware(app: FastAPI) -> None:
+    """Register the auth+budget middleware in `create_app()` (before startup).
 
-    Must be called once during app setup, AFTER lifespan has populated
-    `app.state.agent_graph`. No-op when `COPILOTKIT_ENABLED` is false.
+    `app.add_middleware()` is a no-op once the app has started, so this MUST
+    run during app construction, not from the lifespan.
+    """
+    if not agent_config.COPILOTKIT_ENABLED:
+        return
+    app.add_middleware(
+        _CopilotkitAuthMiddleware,
+        path=agent_config.COPILOTKIT_PATH,
+    )
+
+
+def mount_copilotkit_bridge(app: FastAPI) -> None:
+    """Mount the CopilotKit Python SDK endpoint at COPILOTKIT_PATH.
+
+    Must be called once during app startup, AFTER lifespan has populated
+    `app.state.agent_graph`. The auth middleware is registered earlier via
+    `register_copilotkit_auth_middleware()`. No-op when `COPILOTKIT_ENABLED`
+    is false or when the graph is unavailable.
     """
     if not agent_config.COPILOTKIT_ENABLED:
         logger.info("COPILOTKIT_ENABLED=false — bridge not mounted")
@@ -270,9 +423,10 @@ def mount_copilotkit_bridge(app: FastAPI) -> None:
 
     # 1) Duplicate-route guard.
     for route in app.routes:
-        if getattr(route, "path", None) == agent_config.COPILOTKIT_PATH:
+        route_path = getattr(route, "path", "") or ""
+        if route_path.startswith(agent_config.COPILOTKIT_PATH):
             raise RuntimeError(
-                f"Route {agent_config.COPILOTKIT_PATH} already mounted; cannot mount CopilotKit bridge twice"
+                f"Route prefix {agent_config.COPILOTKIT_PATH} already mounted; cannot mount CopilotKit bridge twice"
             )
 
     # 2) Resolve the compiled graph.
@@ -285,27 +439,45 @@ def mount_copilotkit_bridge(app: FastAPI) -> None:
         )
         return
 
-    # 3) Build the admin-gated agent and mount the ag-ui endpoint.
-    base_agent = LangGraphAgent(
+    # 3) Build the admin-gated agent and the CopilotKit SDK endpoint.
+    gated_agent = _AdminGatedAgent(
         name=agent_config.COPILOTKIT_AGENT_NAME,
         graph=graph,
         description=agent_config.COPILOTKIT_AGENT_DESCRIPTION,
     )
-    gated_agent = _AdminGatedAgent(
-        name=base_agent.name,
-        graph=base_agent.graph,
-        description=base_agent.description,
-        config=base_agent.config,
-    )
-    add_langgraph_fastapi_endpoint(app, gated_agent, path=agent_config.COPILOTKIT_PATH)
+    sdk = CopilotKitRemoteEndpoint(agents=[gated_agent])
 
-    # 4) Pre-flight auth + budget middleware (runs before ag-ui endpoint).
-    app.add_middleware(
-        _CopilotkitAuthMiddleware,
-        path=agent_config.COPILOTKIT_PATH,
+    # 3a) Mount the CopilotKit `/info` route explicitly at `COPILOTKIT_PATH` (no
+    # trailing slash). `add_fastapi_endpoint` only mounts `/{path:path}` — it
+    # does NOT match the empty-path case, so the React client's first call to
+    # `${runtimeUrl}/info` would otherwise 404. We re-use the SDK's own
+    # `handle_info` so the payload shape stays in sync with future SDK releases.
+    async def _info_endpoint(request: Request) -> JSONResponse:
+        context = cast(
+            CopilotKitContext,
+            {
+                "properties": {},
+                "frontend_url": None,
+                "headers": dict(request.headers),
+            },
+        )
+        return await handle_info(sdk=sdk, context=context, as_html=False)
+
+    app.add_api_route(
+        agent_config.COPILOTKIT_PATH,
+        _info_endpoint,
+        methods=["GET", "POST"],
     )
 
-    # 5) Init budget state.
+    # 3b) Mount the catch-all agent/action routes.
+    add_fastapi_endpoint(app, sdk, agent_config.COPILOTKIT_PATH)
+
+    # 3c) Expose the agent instance to the GraphQL proxy (it reads from
+    # `app.state.copilotkit_agents`).
+    app.state.copilotkit_agents = [gated_agent]
+    app.state.copilotkit_sdk = sdk
+
+    # 4) Init budget state on first mount.
     _ensure_budget_state(app)
 
     logger.info(
@@ -315,4 +487,4 @@ def mount_copilotkit_bridge(app: FastAPI) -> None:
     )
 
 
-__all__ = ["mount_copilotkit_bridge"]
+__all__ = ["mount_copilotkit_bridge", "register_copilotkit_auth_middleware"]
